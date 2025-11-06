@@ -29,14 +29,26 @@ if __name__ == "__main__":
     parser.add_argument(
         '--num_rollouts',
         type=int,
-        default=5,
-        help='Number of full rollouts to collect.'
+        default=1000,
+        help='Number of full rollouts to collect. The paper uses 10,000.'
     )
     parser.add_argument(
         '--data_dir',
         type=str,
-        default='dataset_test',
+        default='dataset',
         help='Directory to save the rollout .npz files.'
+    )
+    parser.add_argument(
+        '--steer_min',
+        type=int,
+        default=20,
+        help='Minimum steps to hold a steering action.'
+    )
+    parser.add_argument(
+        '--steer_max',
+        type=int,
+        default=100,
+        help='Maximum steps to hold a steering action.'
     )
 
     args = parser.parse_args()
@@ -62,12 +74,20 @@ if __name__ == "__main__":
 
         done = False
 
-        while not done:
-            steer = -1.0
-            gas = 1.0
-            brake = 0.0
+        current_action = np.array([0.0, 0.0, 0.0], dtype=np.float32)
+        current_steer_duration = 0
 
-            current_action = np.array([steer, gas, brake], dtype=np.float32)
+        while not done:
+
+            if current_steer_duration <= 0:
+                steer_choice = np.random.choice([-1.0, 0.0, 1.0])
+                current_action[0] = steer_choice
+                current_action[1] = 1.0
+                current_action[2] = 0.0
+
+                current_steer_duration = np.random.randint(args.steer_min, args.steer_max)
+
+            current_steer_duration -= 1
 
             next_obs, reward, terminated, truncated, info = env.step(current_action)
             done = terminated or truncated

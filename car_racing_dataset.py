@@ -9,10 +9,23 @@ import argparse
 
 ENV_NAME = 'CarRacing-v3'
 RESIZE_SIZE = 64
+WARMUP_STEPS = 50
+
+original_height = 96
+original_width = 96
+crop_height = 84
 
 transform = T.Compose([
     T.ToImage(),
-    T.Resize((RESIZE_SIZE, RESIZE_SIZE), antialias=True),
+    T.CroppedResize(
+        top=0,
+        left=0,
+        height=crop_height,
+        width=original_width,
+        size=(RESIZE_SIZE, RESIZE_SIZE),
+        interpolation=T.InterpolationMode.BILINEAR,
+        antialias=True
+    ),
     T.ToDtype(torch.uint8, scale=False)
 ])
 
@@ -66,6 +79,10 @@ if __name__ == "__main__":
     for i in tqdm(range(args.num_rollouts)):
 
         obs, info = env.reset()
+
+        warmup_action = np.array([0.0, 1.0, 0.0], dtype=np.float32)
+        for _ in range(WARMUP_STEPS):
+            obs, _, _, _, _ = env.step(warmup_action)
 
         observations = []
         actions = []

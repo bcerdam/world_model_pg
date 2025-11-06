@@ -17,15 +17,8 @@ crop_height = 84
 
 transform = T.Compose([
     T.ToImage(),
-    T.CroppedResize(
-        top=0,
-        left=0,
-        height=crop_height,
-        width=original_width,
-        size=(RESIZE_SIZE, RESIZE_SIZE),
-        interpolation=T.InterpolationMode.BILINEAR,
-        antialias=True
-    ),
+    T.Crop(top=0, left=0, height=crop_height, width=original_width),
+    T.Resize((RESIZE_SIZE, RESIZE_SIZE), antialias=True),
     T.ToDtype(torch.uint8, scale=False)
 ])
 

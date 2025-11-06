@@ -9,6 +9,7 @@ import argparse
 
 ENV_NAME = 'CarRacing-v3'
 RESIZE_SIZE = 64
+
 transform = T.Compose([
     T.ToImage(),
     T.Resize((RESIZE_SIZE, RESIZE_SIZE), antialias=True),
@@ -48,8 +49,10 @@ if __name__ == "__main__":
         ENV_NAME,
         render_mode='rgb_array',
         continuous=True,
-        max_episode_steps=1000
+        max_episode_steps=1600
     )
+
+    ACTION_REPEAT = 8
 
     for i in tqdm(range(args.num_rollouts)):
 
@@ -62,14 +65,23 @@ if __name__ == "__main__":
 
         done = False
 
-        while not done:
-            action = env.action_space.sample()
+        step_counter = 0
+        current_action = np.array([0.0, 0.0, 0.0], dtype=np.float32)
 
-            next_obs, reward, terminated, truncated, info = env.step(action)
+        while not done:
+
+            if step_counter % ACTION_REPEAT == 0:
+                current_action[0] = np.random.uniform(-1.0, 1.0)
+                current_action[1] = 1.0
+                current_action[2] = 0.0
+
+            step_counter += 1
+
+            next_obs, reward, terminated, truncated, info = env.step(current_action)
             done = terminated or truncated
 
             observations.append(process_frame(obs))
-            actions.append(action)
+            actions.append(current_action)
             rewards.append(reward)
             dones.append(done)
 

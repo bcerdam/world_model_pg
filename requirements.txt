@@ -1,0 +1,6 @@
+swig
+gymnasium[box2d]
+torch
+torchvision
+tqdm
+Pillow

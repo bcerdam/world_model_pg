@@ -38,6 +38,18 @@ if __name__ == "__main__":
         default='dataset',
         help='Directory to save the rollout .npz files.'
     )
+    parser.add_argument(
+        '--steer_min',
+        type=int,
+        default=20,
+        help='Minimum steps to hold a steering action.'
+    )
+    parser.add_argument(
+        '--steer_max',
+        type=int,
+        default=100,
+        help='Maximum steps to hold a steering action.'
+    )
 
     args = parser.parse_args()
 
@@ -48,11 +60,8 @@ if __name__ == "__main__":
     env = gym.make(
         ENV_NAME,
         render_mode='rgb_array',
-        continuous=True,
-        max_episode_steps=1600
+        continuous=True
     )
-
-    ACTION_REPEAT = 8
 
     for i in tqdm(range(args.num_rollouts)):
 
@@ -65,17 +74,20 @@ if __name__ == "__main__":
 
         done = False
 
-        step_counter = 0
         current_action = np.array([0.0, 0.0, 0.0], dtype=np.float32)
+        current_steer_duration = 0
 
         while not done:
 
-            if step_counter % ACTION_REPEAT == 0:
-                current_action[0] = np.random.uniform(-1.0, 1.0)
+            if current_steer_duration <= 0:
+                steer_choice = np.random.choice([-1.0, 0.0, 1.0])
+                current_action[0] = steer_choice
                 current_action[1] = 1.0
                 current_action[2] = 0.0
 
-            step_counter += 1
+                current_steer_duration = np.random.randint(args.steer_min, args.steer_max)
+
+            current_steer_duration -= 1
 
             next_obs, reward, terminated, truncated, info = env.step(current_action)
             done = terminated or truncated

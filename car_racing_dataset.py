@@ -30,7 +30,7 @@ if __name__ == "__main__":
         '--num_rollouts',
         type=int,
         default=1000,
-        help='Number of full rollouts to collect. The paper uses 10,000.'
+        help='Number of full rollouts to collect.'
     )
     parser.add_argument(
         '--data_dir',
@@ -39,10 +39,28 @@ if __name__ == "__main__":
         help='Directory to save the rollout .npz files.'
     )
     parser.add_argument(
-        '--steer_noise',
-        type=float,
-        default=0.1,
-        help='How much to randomly vary the steering each frame.'
+        '--turn_duration_min',
+        type=int,
+        default=15,
+        help='Minimum steps to hold a steering action.'
+    )
+    parser.add_argument(
+        '--turn_duration_max',
+        type=int,
+        default=30,
+        help='Maximum steps to hold a steering action.'
+    )
+    parser.add_argument(
+        '--straight_duration_min',
+        type=int,
+        default=20,
+        help='Minimum steps to drive straight.'
+    )
+    parser.add_argument(
+        '--straight_duration_max',
+        type=int,
+        default=100,
+        help='Maximum steps to drive straight.'
     )
 
     args = parser.parse_args()
@@ -72,22 +90,31 @@ if __name__ == "__main__":
 
         done = False
 
-        current_steer = np.random.uniform(-1.0, 1.0)
+        current_action = np.array([0.0, 1.0, 0.0], dtype=np.float32)
+        frames_remaining = 0
+        driving_straight = True
 
         while not done:
-            noise = np.random.uniform(-args.steer_noise, args.steer_noise)
-            current_steer = np.clip(current_steer + noise, -1.0, 1.0)
 
-            gas = 1.0
-            brake = 0.0
+            if frames_remaining <= 0:
+                if driving_straight:
+                    current_action[0] = np.random.uniform(-1.0, 1.0)
+                    frames_remaining = np.random.randint(args.turn_duration_min, args.turn_duration_max)
+                    driving_straight = False
+                else:
+                    current_action[0] = 0.0
+                    frames_remaining = np.random.randint(args.straight_duration_min, args.straight_duration_max)
+                    driving_straight = True
 
-            current_action = np.array([current_steer, gas, brake], dtype=np.float32)
+            frames_remaining -= 1
+            current_action[1] = 1.0
+            current_action[2] = 0.0
 
             next_obs, reward, terminated, truncated, info = env.step(current_action)
             done = terminated or truncated
 
             observations.append(process_frame(obs))
-            actions.append(current_action)
+            actions.append(current_action.copy())
             rewards.append(reward)
             dones.append(done)
 

@@ -44,7 +44,12 @@ if __name__ == "__main__":
     print(f"Starting data collection for {args.num_rollouts} rollouts ({ENV_NAME})...")
     print(f"Data will be saved in '{args.data_dir}'")
 
-    env = gym.make(ENV_NAME, render_mode='rgb_array', continuous=False)
+    env = gym.make(
+        ENV_NAME,
+        render_mode='rgb_array',
+        continuous=True,
+        max_episode_steps=1000
+    )
 
     for i in tqdm(range(args.num_rollouts)):
 
@@ -75,7 +80,7 @@ if __name__ == "__main__":
         np.savez_compressed(
             filename,
             observations=np.array(observations, dtype=np.uint8),
-            actions=np.array(actions, dtype=np.int64),
+            actions=np.array(actions, dtype=np.float32),
             rewards=np.array(rewards, dtype=np.float32),
             dones=np.array(dones, dtype=bool)
         )

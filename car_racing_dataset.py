@@ -1,8 +1,6 @@
 import gymnasium as gym
 import numpy as np
 import os
-import torch
-import torchvision.transforms as T
 from PIL import Image
 from tqdm import tqdm
 import argparse
@@ -15,17 +13,13 @@ original_height = 96
 original_width = 96
 crop_height = 84
 
-transform = T.Compose([
-    T.ToPILImage(),
-    T.Crop(top=0, left=0, height=crop_height, width=original_width),
-    T.Resize((RESIZE_SIZE, RESIZE_SIZE), interpolation=T.InterpolationMode.BILINEAR),
-    T.PILToTensor()
-])
-
 
 def process_frame(frame):
-    processed_tensor = transform(frame)
-    return processed_tensor.permute(1, 2, 0).numpy()
+    img = Image.fromarray(frame)
+    crop_box = (0, 0, original_width, crop_height)
+    img_cropped = img.crop(crop_box)
+    img_resized = img_cropped.resize((RESIZE_SIZE, RESIZE_SIZE), Image.Resampling.BILINEAR)
+    return np.array(img_resized)
 
 
 if __name__ == "__main__":

@@ -1,66 +1,93 @@
 import gymnasium as gym
 import numpy as np
-import matplotlib.pyplot as plt
-import ipywidgets as widgets
-from IPython.display import display, clear_output
-import time
+import os
+import torch
+import torchvision.transforms.v2 as T
+from PIL import Image
+from tqdm import tqdm
+import argparse
 
 ENV_NAME = 'CarRacing-v3'
+RESIZE_SIZE = 64
 
-stop_loop = False
-
-env = gym.make(ENV_NAME, render_mode='rgb_array', continuous=True)
-obs, info = env.reset()
-
-steer_slider = widgets.FloatSlider(min=-1.0, max=1.0, step=0.1, value=0.0, description='Steer:')
-gas_slider = widgets.FloatSlider(min=0.0, max=1.0, step=0.1, value=0.0, description='Gas:')
-brake_slider = widgets.FloatSlider(min=0.0, max=1.0, step=0.1, value=0.0, description='Brake:')
-stop_button = widgets.Button(description='Stop Simulation')
+transform = T.Compose([
+    T.ToImage(),
+    T.Resize((RESIZE_SIZE, RESIZE_SIZE), antialias=True),
+    T.ToDtype(torch.uint8, scale=False)
+])
 
 
-def on_stop_button_clicked(b):
-    global stop_loop
-    stop_loop = True
+def process_frame(frame):
+    processed_tensor = transform(frame)
+    return processed_tensor.permute(1, 2, 0).numpy()
 
 
-stop_button.on_click(on_stop_button_clicked)
+if __name__ == "__main__":
 
-print("--- Controls ---")
-display(steer_slider, gas_slider, brake_slider, stop_button)
-print("\n--- Game View ---")
+    parser = argparse.ArgumentParser(description="Collect data from CarRacing-v3")
 
-fig, ax = plt.subplots(1, 1, figsize=(6, 6))
+    parser.add_argument(
+        '--num_rollouts',
+        type=int,
+        default=5,
+        help='Number of full rollouts to collect.'
+    )
+    parser.add_argument(
+        '--data_dir',
+        type=str,
+        default='dataset_test',
+        help='Directory to save the rollout .npz files.'
+    )
 
-try:
-    while not stop_loop:
-        s = steer_slider.value
-        g = gas_slider.value
-        b = brake_slider.value
+    args = parser.parse_args()
 
-        action = np.array([s, g, b], dtype=np.float32)
+    os.makedirs(args.data_dir, exist_ok=True)
+    print(f"Starting data collection for {args.num_rollouts} rollouts ({ENV_NAME})...")
+    print(f"Data will be saved in '{args.data_dir}'")
 
-        frame, reward, terminated, truncated, info = env.step(action)
+    env = gym.make(
+        ENV_NAME,
+        render_mode='rgb_array',
+        continuous=True
+    )
 
-        if terminated or truncated:
-            print("Rollout Finished. Resetting environment.")
-            obs, info = env.reset()
+    for i in tqdm(range(args.num_rollouts)):
 
-        clear_output(wait=True)
+        obs, info = env.reset()
 
-        print("--- Controls ---")
-        display(steer_slider, gas_slider, brake_slider, stop_button)
-        print("\n--- Game View ---")
-        print(f"Action: [S:{s: .2f}, G:{g: .2f}, B:{b: .2f}] | Reward: {reward: .4f}")
+        observations = []
+        actions = []
+        rewards = []
+        dones = []
 
-        ax.imshow(frame)
-        ax.axis('off')
-        display(fig)
+        done = False
 
-        time.sleep(0.01)
+        while not done:
+            steer = -1.0
+            gas = 1.0
+            brake = 0.0
 
-except KeyboardInterrupt:
-    print("\nLoop interrupted.")
-finally:
+            current_action = np.array([steer, gas, brake], dtype=np.float32)
+
+            next_obs, reward, terminated, truncated, info = env.step(current_action)
+            done = terminated or truncated
+
+            observations.append(process_frame(obs))
+            actions.append(current_action)
+            rewards.append(reward)
+            dones.append(done)
+
+            obs = next_obs
+
+        filename = os.path.join(args.data_dir, f'rollout_{i}.npz')
+
+        np.savez_compressed(
+            filename,
+            observations=np.array(observations, dtype=np.uint8),
+            actions=np.array(actions, dtype=np.float32),
+            rewards=np.array(rewards, dtype=np.float32),
+            dones=np.array(dones, dtype=bool)
+        )
+
     env.close()
-    clear_output(wait=True)
-    print("Simulation stopped and environment closed.")
+    print(f"\nData collection complete. {args.num_rollouts} rollouts saved in '{args.data_dir}'.")

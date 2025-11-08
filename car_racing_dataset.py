@@ -4,6 +4,7 @@ import os
 from PIL import Image
 from tqdm import tqdm
 import argparse
+import imageio.v3 as iio
 
 ENV_NAME = 'CarRacing-v3'
 RESIZE_SIZE = 64
@@ -12,6 +13,22 @@ WARMUP_STEPS = 50
 original_height = 96
 original_width = 96
 crop_height = 84
+
+
+def create_video_from_rollout(rollout_path, output_video_path, fps=30):
+    with np.load(rollout_path) as data:
+        observations = data['observations']
+
+    print(f"Creating video from {len(observations)} frames...")
+
+    iio.imwrite(
+        output_video_path,
+        observations,
+        fps=fps,
+        pixelformat='yuv420p'
+    )
+
+    print(f"Successfully saved video to {output_video_path}")
 
 
 def process_frame(frame):
@@ -29,7 +46,7 @@ if __name__ == "__main__":
     parser.add_argument(
         '--num_rollouts',
         type=int,
-        default=1000,
+        default=1,
         help='Number of full rollouts to collect.'
     )
     parser.add_argument(
@@ -41,26 +58,20 @@ if __name__ == "__main__":
     parser.add_argument(
         '--turn_duration_min',
         type=int,
-        default=15,
+        default=1,
         help='Minimum steps to hold a steering action.'
     )
     parser.add_argument(
         '--turn_duration_max',
         type=int,
-        default=30,
+        default=2,
         help='Maximum steps to hold a steering action.'
     )
     parser.add_argument(
-        '--straight_duration_min',
-        type=int,
-        default=20,
-        help='Minimum steps to drive straight.'
-    )
-    parser.add_argument(
-        '--straight_duration_max',
-        type=int,
-        default=100,
-        help='Maximum steps to drive straight.'
+        '--gas_amount',
+        type=float,
+        default=0.1,
+        help='Amount of acceleration to apply (0.0 to 1.0).'
     )
 
     args = parser.parse_args()
@@ -90,24 +101,18 @@ if __name__ == "__main__":
 
         done = False
 
-        current_action = np.array([0.0, 1.0, 0.0], dtype=np.float32)
+        current_action = np.array([0.0, args.gas_amount, 0.0], dtype=np.float32)
         frames_remaining = 0
-        driving_straight = True
 
         while not done:
 
             if frames_remaining <= 0:
-                if driving_straight:
-                    current_action[0] = np.random.uniform(-1.0, 1.0)
-                    frames_remaining = np.random.randint(args.turn_duration_min, args.turn_duration_max)
-                    driving_straight = False
-                else:
-                    current_action[0] = 0.0
-                    frames_remaining = np.random.randint(args.straight_duration_min, args.straight_duration_max)
-                    driving_straight = True
+                steer_choice = np.random.choice([-1.0, 1.0])
+                current_action[0] = steer_choice
+                frames_remaining = np.random.randint(args.turn_duration_min, args.turn_duration_max)
 
             frames_remaining -= 1
-            current_action[1] = 1.0
+            current_action[1] = args.gas_amount
             current_action[2] = 0.0
 
             next_obs, reward, terminated, truncated, info = env.step(current_action)

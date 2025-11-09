@@ -1,0 +1,13 @@
+# Python / IDE
+__pycache__/
+.idea/
+
+# Data (Never track large data files)
+data/
+
+# Logs and Checkpoints (These are results, not code)
+model_logs/
+model_checkpoints/
+
+# Other outputs
+video_output/

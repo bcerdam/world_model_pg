@@ -6,10 +6,18 @@ import imageio.v3 as iio
 import torch
 import torchvision.transforms as T
 from PIL import Image
-from vae_model import VAE, LATENT_DIM
+import sys
+
+# --- PATH UPDATED ---
+# Add project root to sys.path to allow importing from VAE module
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from VAE.vae_model import VAE, LATENT_DIM
 
 
-def plot_training_logs(csv_path, save_dir='vae_logs'):
+# --- END OF PATH UPDATE ---
+
+
+def plot_training_logs(csv_path, save_dir='model_logs/vae_logs'):
     if not os.path.exists(csv_path):
         print(f"Error: Log file not found at {csv_path}")
         return
@@ -37,6 +45,7 @@ def plot_training_logs(csv_path, save_dir='vae_logs'):
 
     plt.tight_layout()
 
+    os.makedirs(save_dir, exist_ok=True)
     save_path = os.path.join(save_dir, 'training_plots.png')
     fig.savefig(save_path)
     print(f"Training plots saved to {save_path}")
@@ -82,6 +91,10 @@ def create_vae_comparison_video(rollout_path, vae_model_path, output_video_path,
 
     print(f"Creating side-by-side video from {len(observations)} frames...")
 
+    output_dir = os.path.dirname(output_video_path)
+    if output_dir:
+        os.makedirs(output_dir, exist_ok=True)
+
     iio.imwrite(
         output_video_path,
         side_by_side_frames,
@@ -92,7 +105,7 @@ def create_vae_comparison_video(rollout_path, vae_model_path, output_video_path,
     print(f"Successfully saved comparison video to {output_video_path}")
 
 
-def plot_rnn_logs(csv_path, save_dir='rnn_logs'):
+def plot_rnn_logs(csv_path, save_dir='model_logs/rnn_logs'):
     if not os.path.exists(csv_path):
         print(f"Error: Log file not found at {csv_path}")
         return
@@ -111,6 +124,7 @@ def plot_rnn_logs(csv_path, save_dir='rnn_logs'):
 
     plt.tight_layout()
 
+    os.makedirs(save_dir, exist_ok=True)
     save_path = os.path.join(save_dir, 'rnn_training_plots.png')
     fig.savefig(save_path)
     print(f"Training plots saved to {save_path}")

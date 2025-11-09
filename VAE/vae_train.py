@@ -8,6 +8,8 @@ import argparse
 from tqdm import tqdm
 import pandas as pd
 
+# These imports will work as long as vae_model.py and vae_dataset.py
+# are in the same 'VAE/' folder as this script.
 from vae_model import VAE, LATENT_DIM
 from vae_dataset import VAE_Dataset
 
@@ -23,17 +25,20 @@ def vae_loss(recon_x, x, mu, logvar):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Train VAE for World Models')
 
-    parser.add_argument('--data_dir', type=str, default='dataset', help='Directory of dataset')
+    # --- PATHS UPDATED ---
+    parser.add_argument('--data_dir', type=str, default='data/vae_dataset',
+                        help='Directory of dataset')
+    parser.add_argument('--log_dir', type=str, default='model_logs/vae_logs',
+                        help='Dir to save logs/models')
+    parser.add_argument('--ckpt_dir', type=str, default='model_checkpoints/vae_checkpoints',
+                        help='Dir to save model checkpoints')
+    # --- END OF PATH UPDATES ---
+
     parser.add_argument('--max_rollouts', type=int, default=2000, help='Max rollouts to load')
     parser.add_argument('--latent_dim', type=int, default=LATENT_DIM, help='Latent dimension size')
     parser.add_argument('--epochs', type=int, default=20, help='Number of epochs to train')
     parser.add_argument('--batch_size', type=int, default=64, help='Batch size')
     parser.add_argument('--lr', type=float, default=1e-4, help='Learning rate')
-    parser.add_argument('--log_dir', type=str, default='vae_logs', help='Dir to save logs/models')
-
-    # WHERE THE CHANGE IS: This new argument defines the separate checkpoint folder.
-    parser.add_argument('--ckpt_dir', type=str, default='vae_checkpoints', help='Dir to save model checkpoints')
-
     parser.add_argument('--save_model', type=str, default='vae_final.pth', help='Final trained model filename')
     parser.add_argument('--save_interval', type=int, default=2,
                         help='Save sample images and model weights every N epochs')
@@ -65,8 +70,6 @@ if __name__ == '__main__':
     optimizer = optim.Adam(model.parameters(), lr=args.lr)
 
     os.makedirs(args.log_dir, exist_ok=True)
-
-    # WHERE THE CHANGE IS: We create the new, separate folder for checkpoints.
     os.makedirs(args.ckpt_dir, exist_ok=True)
 
     training_logs = []
@@ -137,7 +140,6 @@ if __name__ == '__main__':
                 save_path = os.path.join(args.log_dir, f'recon_epoch_{epoch}.png')
                 save_image(comparison.cpu(), save_path, nrow=8)
 
-            # WHERE THE CHANGE IS: We save a model checkpoint to the new directory.
             ckpt_path = os.path.join(args.ckpt_dir, f'vae_epoch_{epoch}.pth')
             torch.save(model.state_dict(), ckpt_path)
             print(f"Saved checkpoint to {ckpt_path}")

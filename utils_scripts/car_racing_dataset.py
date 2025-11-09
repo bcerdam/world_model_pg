@@ -112,7 +112,8 @@ if __name__ == "__main__":
     parser.add_argument(
         '--data_dir',
         type=str,
-        default='dataset',
+        # --- PATH UPDATED ---
+        default='data/vae_dataset',
         help='Directory to save the rollout .npz files.'
     )
     parser.add_argument(

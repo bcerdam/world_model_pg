@@ -112,10 +112,19 @@ if __name__ == "__main__":
     parser.add_argument(
         '--data_dir',
         type=str,
-        # --- PATH UPDATED ---
         default='data/vae_dataset',
         help='Directory to save the rollout .npz files.'
     )
+
+    # --- NEW ARGUMENT ---
+    parser.add_argument(
+        '--num_workers',
+        type=int,
+        default=None,
+        help='Number of CPU workers. (Default: Auto-detects from SLURM or cpu_count)'
+    )
+    # --- END OF NEW ARGUMENT ---
+
     parser.add_argument(
         '--turn_duration_min',
         type=int,
@@ -166,8 +175,15 @@ if __name__ == "__main__":
     print(f"Data will be saved in '{args.data_dir}'")
 
     if args.num_rollouts > 1:
-        num_workers = multiprocessing.cpu_count()
-        print(f"Using {num_workers} CPU workers.")
+
+        # --- UPDATED LOGIC ---
+        if args.num_workers:
+            num_workers = args.num_workers
+            print(f"Using {num_workers} CPU workers (manual override).")
+        else:
+            num_workers = int(os.environ.get('SLURM_CPUS_PER_TASK', multiprocessing.cpu_count()))
+            print(f"Using {num_workers} CPU workers (auto-detected).")
+        # --- END OF UPDATED LOGIC ---
 
         worker_fn = partial(run_rollout, args=args)
         rollout_ids = range(args.num_rollouts)

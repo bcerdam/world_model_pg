@@ -90,3 +90,28 @@ def create_vae_comparison_video(rollout_path, vae_model_path, output_video_path,
     )
 
     print(f"Successfully saved comparison video to {output_video_path}")
+
+
+def plot_rnn_logs(csv_path, save_dir='rnn_logs'):
+    if not os.path.exists(csv_path):
+        print(f"Error: Log file not found at {csv_path}")
+        return
+
+    df = pd.read_csv(csv_path)
+
+    fig, ax1 = plt.subplots(1, 1, figsize=(10, 5))
+
+    ax1.plot(df['epoch'], df['train_loss'], label='Train Loss')
+    ax1.plot(df['epoch'], df['val_loss'], label='Validation Loss')
+    ax1.set_xlabel('Epoch')
+    ax1.set_ylabel('MDN Loss')
+    ax1.legend()
+    ax1.set_title('MDN-RNN Training Loss')
+    ax1.grid(True)
+
+    plt.tight_layout()
+
+    save_path = os.path.join(save_dir, 'rnn_training_plots.png')
+    fig.savefig(save_path)
+    print(f"Training plots saved to {save_path}")
+    plt.close(fig)

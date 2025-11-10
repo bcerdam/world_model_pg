@@ -74,7 +74,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Preprocess dataset for RNN')
 
     parser.add_argument('--data_dir', type=str, default='data/vae_dataset/', help='Directory of .npz rollouts')
-    parser.add_argument('--vae_model', type=str, default='cluster_results/model_checkpoints/vae_checkpoints/vae_epoch_10.pth', help='Path to trained VAE model')
+    parser.add_argument('--vae_model', type=str, default='model_checkpoints/vae_checkpoints/vae_epoch_10.pth', help='Path to trained VAE model')
     parser.add_argument('--output_path', type=str, default='data/rnn_dataset/rnn_dataset.npz',
                         help='Path to save the new preprocessed file')
     parser.add_argument('--max_rollouts', type=int, default=10000, help='Max rollouts to process')

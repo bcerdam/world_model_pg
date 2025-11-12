@@ -96,8 +96,8 @@ if __name__ == "__main__":
     parser.add_argument('--rollout_path', type=str, default='data/vae_dataset/rollout_0.npz',
                         help='Path to a single .npz rollout')
     parser.add_argument('--vae_model', type=str, default='cluster_results/model_checkpoints/vae_checkpoints/vae_epoch_10.pth', help='Path to trained VAE model')
-    parser.add_argument('--rnn_model', type=str, default='model_checkpoints/rnn_checkpoints/rnn_epoch_2.pth', help='Path to trained RNN model')
-    parser.add_argument('--output_path', type=str, default='video_output/rnn_dream_comparison.mp4',
+    parser.add_argument('--rnn_model', type=str, default='cluster_results/model_checkpoints/rnn_checkpoints/rnn_epoch_10.pth', help='Path to trained RNN model')
+    parser.add_argument('--output_path', type=str, default='video_output/rnn_epoch_10.mp4',
                         help='Path to save the output .mp4 video')
 
     args = parser.parse_args()

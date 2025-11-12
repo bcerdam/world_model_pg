@@ -1,34 +1,35 @@
 import torch
 import torch.optim as optim
+import torch.nn.functional as F
 from torch.utils.data import DataLoader
 import os
 import argparse
 from tqdm import tqdm
 import pandas as pd
+import sys
 
-# These imports will work as long as rnn_model.py and rnn_dataset.py
-# are in the same 'RNN/' folder as this script.
-from rnn_model import MDN_RNN, mdn_loss, LATENT_DIM, ACTION_DIM, HIDDEN_DIM
-from rnn_dataset import RNN_Dataset
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from RNN.rnn_model import MDN_RNN, mdn_loss, LATENT_DIM, ACTION_DIM, HIDDEN_DIM
+from RNN.rnn_dataset import RNN_Dataset
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Train MDN-RNN for World Models')
 
-    # --- PATHS UPDATED ---
     parser.add_argument('--data_path', type=str, default='data/rnn_dataset/rnn_dataset.npz',
                         help='Path to preprocessed rnn_dataset.npz')
-    parser.add_argument('--log_dir', type=str, default='model_logs/rnn_logs',
-                        help='Dir to save logs/models')
-    parser.add_argument('--ckpt_dir', type=str, default='model_checkpoints/rnn_checkpoints',
-                        help='Dir to save model checkpoints')
-    # --- END OF PATH UPDATES ---
-
     parser.add_argument('--seq_len', type=int, default=100, help='Sequence length for training')
-    parser.add_argument('--epochs', type=int, default=20, help='Number of epochs to train')
+    parser.add_argument('--epochs', type=int, default=10, help='Number of epochs to train')
     parser.add_argument('--batch_size', type=int, default=32, help='Batch size')
     parser.add_argument('--lr', type=float, default=1e-3, help='Learning rate')
+
+    parser.add_argument('--hidden_dim', type=int, default=HIDDEN_DIM, help='RNN hidden dimension')
+    parser.add_argument('--dropout', type=float, default=0.1, help='Dropout probability for LSTM')
+    parser.add_argument('--weight_decay', type=float, default=1e-5, help='Weight decay (L2 penalty) for optimizer')
+
+    parser.add_argument('--log_dir', type=str, default='rnn_logs', help='Dir to save logs/models')
+    parser.add_argument('--ckpt_dir', type=str, default='rnn_checkpoints', help='Dir to save model checkpoints')
     parser.add_argument('--save_model', type=str, default='rnn_final.pth', help='Final trained model filename')
-    parser.add_argument('--save_interval', type=int, default=2, help='Save model weights every N epochs')
+    parser.add_argument('--save_interval', type=int, default=1, help='Save model weights every N epochs')
 
     args = parser.parse_args()
 
@@ -38,23 +39,11 @@ if __name__ == '__main__':
     train_dataset = RNN_Dataset(args.data_path, seq_len=args.seq_len, train=True)
     val_dataset = RNN_Dataset(args.data_path, seq_len=args.seq_len, train=False)
 
-    train_loader = DataLoader(
-        train_dataset,
-        batch_size=args.batch_size,
-        shuffle=True,
-        num_workers=2,
-        pin_memory=True
-    )
-    val_loader = DataLoader(
-        val_dataset,
-        batch_size=args.batch_size,
-        shuffle=False,
-        num_workers=2,
-        pin_memory=True
-    )
+    train_loader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True, num_workers=2, pin_memory=True)
+    val_loader = DataLoader(val_dataset, batch_size=args.batch_size, shuffle=False, num_workers=2, pin_memory=True)
 
-    model = MDN_RNN(LATENT_DIM, ACTION_DIM, HIDDEN_DIM).to(device)
-    optimizer = optim.Adam(model.parameters(), lr=args.lr)
+    model = MDN_RNN(LATENT_DIM, ACTION_DIM, args.hidden_dim, dropout_prob=args.dropout).to(device)
+    optimizer = optim.Adam(model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
 
     os.makedirs(args.log_dir, exist_ok=True)
     os.makedirs(args.ckpt_dir, exist_ok=True)
@@ -65,30 +54,48 @@ if __name__ == '__main__':
 
     for epoch in range(1, args.epochs + 1):
         model.train()
-        train_loss = 0
+        train_loss, train_mdn, train_rew, train_done = 0, 0, 0, 0
         pbar = tqdm(train_loader)
 
-        for batch_idx, (z_t, a_t, z_next) in enumerate(pbar):
+        for batch_idx, (z_t, a_t, z_next, r_next, d_next) in enumerate(pbar):
             z_t, a_t, z_next = z_t.to(device), a_t.to(device), z_next.to(device)
+            r_next, d_next = r_next.to(device), d_next.to(device)
+
             optimizer.zero_grad()
 
-            (log_pi, mu, log_sigma), _ = model(z_t, a_t)
-            loss = mdn_loss(log_pi, mu, log_sigma, z_next)
+            (log_pi, mu, log_sigma, pred_r, pred_d_logits), _ = model(z_t, a_t)
+
+            l_mdn = mdn_loss(log_pi, mu, log_sigma, z_next)
+            l_reward = F.mse_loss(pred_r.squeeze(-1), r_next)
+            l_done = F.binary_cross_entropy_with_logits(pred_d_logits.squeeze(-1), d_next)
+
+            loss = l_mdn + l_reward + l_done
 
             loss.backward()
             optimizer.step()
 
             train_loss += loss.item()
-            pbar.set_description(f"Epoch {epoch} [Train Loss: {loss.item():.4f}]")
+            train_mdn += l_mdn.item()
+            train_rew += l_reward.item()
+            train_done += l_done.item()
+
+            pbar.set_description(
+                f"Epoch {epoch} [Total: {loss.item():.3f} | MDN: {l_mdn.item():.3f} | R: {l_reward.item():.3f} | D: {l_done.item():.3f}]")
 
         model.eval()
         val_loss = 0
         with torch.no_grad():
-            for z_t, a_t, z_next in val_loader:
+            for z_t, a_t, z_next, r_next, d_next in val_loader:
                 z_t, a_t, z_next = z_t.to(device), a_t.to(device), z_next.to(device)
-                (log_pi, mu, log_sigma), _ = model(z_t, a_t)
-                loss = mdn_loss(log_pi, mu, log_sigma, z_next)
-                val_loss += loss.item()
+                r_next, d_next = r_next.to(device), d_next.to(device)
+
+                (log_pi, mu, log_sigma, pred_r, pred_d_logits), _ = model(z_t, a_t)
+
+                l_mdn = mdn_loss(log_pi, mu, log_sigma, z_next)
+                l_reward = F.mse_loss(pred_r.squeeze(-1), r_next)
+                l_done = F.binary_cross_entropy_with_logits(pred_d_logits.squeeze(-1), d_next)
+
+                val_loss += (l_mdn + l_reward + l_done).item()
 
         train_loss /= len(train_loader)
         val_loss /= len(val_loader)

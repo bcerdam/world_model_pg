@@ -2,6 +2,11 @@ import torch
 from torch.utils.data import Dataset
 import numpy as np
 from tqdm import tqdm
+import os
+import sys
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from VAE.vae_model import LATENT_DIM
 
 
 class RNN_Dataset(Dataset):
@@ -12,6 +17,8 @@ class RNN_Dataset(Dataset):
             all_mus = data['mus']
             all_logvars = data['logvars']
             all_actions = data['actions']
+            all_rewards = data['rewards']
+            all_dones = data['dones']
 
         num_rollouts = len(all_mus)
         split_idx = int(num_rollouts * train_split_ratio)
@@ -20,11 +27,15 @@ class RNN_Dataset(Dataset):
             self.mus = all_mus[:split_idx]
             self.logvars = all_logvars[:split_idx]
             self.actions = all_actions[:split_idx]
+            self.rewards = all_rewards[:split_idx]
+            self.dones = all_dones[:split_idx]
             print(f"Using {len(self.mus)} rollouts for TRAINING.")
         else:
             self.mus = all_mus[split_idx:]
             self.logvars = all_logvars[split_idx:]
             self.actions = all_actions[split_idx:]
+            self.rewards = all_rewards[split_idx:]
+            self.dones = all_dones[split_idx:]
             print(f"Using {len(self.mus)} rollouts for VALIDATION.")
 
         self.seq_len = seq_len
@@ -60,4 +71,7 @@ class RNN_Dataset(Dataset):
 
         z_tplus1 = self.__reparameterize(mu_next_seq, logvar_next_seq)
 
-        return (z_t, a_t, z_tplus1)
+        r_tplus1 = torch.from_numpy(self.rewards[rollout_idx][start_idx + 1: start_idx + self.seq_len + 1]).float()
+        d_tplus1 = torch.from_numpy(self.dones[rollout_idx][start_idx + 1: start_idx + self.seq_len + 1]).float()
+
+        return (z_t, a_t, z_tplus1, r_tplus1, d_tplus1)

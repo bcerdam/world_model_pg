@@ -55,7 +55,9 @@ if __name__ == '__main__':
     for epoch in range(1, args.epochs + 1):
         model.train()
         train_loss, train_mdn, train_rew, train_done = 0, 0, 0, 0
-        pbar = tqdm(train_loader)
+
+        # WHERE THE CHANGE IS: Added desc to tqdm, removed set_description inside loop
+        pbar = tqdm(train_loader, desc=f"Epoch {epoch}")
 
         for batch_idx, (z_t, a_t, z_next, r_next, d_next) in enumerate(pbar):
             z_t, a_t, z_next = z_t.to(device), a_t.to(device), z_next.to(device)
@@ -78,9 +80,6 @@ if __name__ == '__main__':
             train_mdn += l_mdn.item()
             train_rew += l_reward.item()
             train_done += l_done.item()
-
-            pbar.set_description(
-                f"Epoch {epoch} [Total: {loss.item():.3f} | MDN: {l_mdn.item():.3f} | R: {l_reward.item():.3f} | D: {l_done.item():.3f}]")
 
         model.eval()
         val_loss = 0

@@ -18,18 +18,17 @@ if __name__ == '__main__':
     parser.add_argument('--data_path', type=str, default='data/rnn_dataset/rnn_dataset.npz',
                         help='Path to preprocessed rnn_dataset.npz')
     parser.add_argument('--seq_len', type=int, default=100, help='Sequence length for training')
-    parser.add_argument('--epochs', type=int, default=10, help='Number of epochs to train')
+    parser.add_argument('--epochs', type=int, default=20, help='Number of epochs to train')
     parser.add_argument('--batch_size', type=int, default=32, help='Batch size')
     parser.add_argument('--lr', type=float, default=1e-3, help='Learning rate')
-
     parser.add_argument('--hidden_dim', type=int, default=HIDDEN_DIM, help='RNN hidden dimension')
-    parser.add_argument('--dropout', type=float, default=0.1, help='Dropout probability for LSTM')
-    parser.add_argument('--weight_decay', type=float, default=1e-5, help='Weight decay (L2 penalty) for optimizer')
+
+    # Removed --dropout and --weight_decay arguments
 
     parser.add_argument('--log_dir', type=str, default='rnn_logs', help='Dir to save logs/models')
     parser.add_argument('--ckpt_dir', type=str, default='rnn_checkpoints', help='Dir to save model checkpoints')
     parser.add_argument('--save_model', type=str, default='rnn_final.pth', help='Final trained model filename')
-    parser.add_argument('--save_interval', type=int, default=1, help='Save model weights every N epochs')
+    parser.add_argument('--save_interval', type=int, default=2, help='Save model weights every N epochs')
 
     args = parser.parse_args()
 
@@ -42,8 +41,11 @@ if __name__ == '__main__':
     train_loader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True, num_workers=0, pin_memory=True)
     val_loader = DataLoader(val_dataset, batch_size=args.batch_size, shuffle=False, num_workers=0, pin_memory=True)
 
-    model = MDN_RNN(LATENT_DIM, ACTION_DIM, args.hidden_dim, dropout_prob=args.dropout).to(device)
-    optimizer = optim.Adam(model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
+    # Initialize model without dropout
+    model = MDN_RNN(LATENT_DIM, ACTION_DIM, args.hidden_dim).to(device)
+
+    # Optimizer without weight_decay
+    optimizer = optim.Adam(model.parameters(), lr=args.lr)
 
     os.makedirs(args.log_dir, exist_ok=True)
     os.makedirs(args.ckpt_dir, exist_ok=True)
@@ -56,7 +58,6 @@ if __name__ == '__main__':
         model.train()
         train_loss, train_mdn, train_rew, train_done = 0, 0, 0, 0
 
-        # WHERE THE CHANGE IS: Added desc to tqdm, removed set_description inside loop
         pbar = tqdm(train_loader, desc=f"Epoch {epoch}")
 
         for batch_idx, (z_t, a_t, z_next, r_next, d_next) in enumerate(pbar):

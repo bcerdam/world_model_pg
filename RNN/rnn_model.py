@@ -10,7 +10,7 @@ HIDDEN_DIM = 256
 
 
 class MDN_RNN(nn.Module):
-    def __init__(self, z_dim=LATENT_DIM, a_dim=ACTION_DIM, h_dim=HIDDEN_DIM, n_gaussians=N_GAUSSIANS, dropout_prob=0.1):
+    def __init__(self, z_dim=LATENT_DIM, a_dim=ACTION_DIM, h_dim=HIDDEN_DIM, n_gaussians=N_GAUSSIANS):
         super(MDN_RNN, self).__init__()
 
         self.z_dim = z_dim
@@ -18,15 +18,13 @@ class MDN_RNN(nn.Module):
         self.h_dim = h_dim
         self.n_gaussians = n_gaussians
 
-        self.lstm = nn.LSTM(z_dim + a_dim, h_dim, batch_first=True, dropout=dropout_prob)
+        # CLEAN BACKBONE: No dropout here
+        self.lstm = nn.LSTM(z_dim + a_dim, h_dim, batch_first=True)
 
-        # MDN Head (Next State)
         self.mdn_head = nn.Linear(h_dim, (2 * z_dim + 1) * n_gaussians)
 
-        # Reward Head (Scalar)
+        # DREAM COMPONENTS: Kept these so it can learn rewards/dones
         self.reward_head = nn.Linear(h_dim, 1)
-
-        # Done Head (Binary prob)
         self.done_head = nn.Linear(h_dim, 1)
 
     def get_mixture_params(self, lstm_output):
@@ -51,7 +49,7 @@ class MDN_RNN(nn.Module):
 
         log_pi, mu, log_sigma = self.get_mixture_params(lstm_out)
 
-        # Predict Reward and Done from the same LSTM features
+        # Predict Reward and Done
         reward = self.reward_head(lstm_out)
         done_logits = self.done_head(lstm_out)
 

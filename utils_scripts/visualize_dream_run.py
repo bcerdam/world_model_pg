@@ -100,10 +100,10 @@ if __name__ == "__main__":
                         default='cluster_results/model_checkpoints/vae_checkpoints/vae_epoch_10.pth')
     parser.add_argument('--rnn_path', type=str,
                         default='cluster_results/model_checkpoints/rnn_checkpoints/rnn_epoch_3.pth')
-    parser.add_argument('--ppo_path', type=str, required=True, help='Path to .zip PPO model')
+    parser.add_argument('--ppo_path', type=str, default='cluster_results/model_checkpoints/controller_checkpoints/ppo_dream_1300000_steps.zip', help='Path to .zip PPO model')
     parser.add_argument('--data_path', type=str, default='data/rnn_dataset/rnn_dataset.npz')
-    parser.add_argument('--output_path', type=str, default='dream_run.mp4')
-    parser.add_argument('--steps', type=int, default=500)
+    parser.add_argument('--output_path', type=str, default='video_output/ppo_dream_run.mp4')
+    parser.add_argument('--steps', type=int, default=1000)
     parser.add_argument('--temperature', type=float, default=1.15)
 
     args = parser.parse_args()

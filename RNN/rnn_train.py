@@ -28,7 +28,7 @@ if __name__ == '__main__':
     parser.add_argument('--log_dir', type=str, default='rnn_logs', help='Dir to save logs/models')
     parser.add_argument('--ckpt_dir', type=str, default='rnn_checkpoints', help='Dir to save model checkpoints')
     parser.add_argument('--save_model', type=str, default='rnn_final.pth', help='Final trained model filename')
-    parser.add_argument('--save_interval', type=int, default=2, help='Save model weights every N epochs')
+    parser.add_argument('--save_interval', type=int, default=1, help='Save model weights every N epochs')
 
     args = parser.parse_args()
 

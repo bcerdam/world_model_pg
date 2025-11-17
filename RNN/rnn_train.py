@@ -39,8 +39,8 @@ if __name__ == '__main__':
     train_dataset = RNN_Dataset(args.data_path, seq_len=args.seq_len, train=True)
     val_dataset = RNN_Dataset(args.data_path, seq_len=args.seq_len, train=False)
 
-    train_loader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True, num_workers=2, pin_memory=True)
-    val_loader = DataLoader(val_dataset, batch_size=args.batch_size, shuffle=False, num_workers=2, pin_memory=True)
+    train_loader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True, num_workers=0, pin_memory=True)
+    val_loader = DataLoader(val_dataset, batch_size=args.batch_size, shuffle=False, num_workers=0, pin_memory=True)
 
     model = MDN_RNN(LATENT_DIM, ACTION_DIM, args.hidden_dim, dropout_prob=args.dropout).to(device)
     optimizer = optim.Adam(model.parameters(), lr=args.lr, weight_decay=args.weight_decay)

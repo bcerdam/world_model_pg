@@ -72,7 +72,9 @@ if __name__ == '__main__':
             l_reward = F.mse_loss(pred_r.squeeze(-1), r_next)
             l_done = F.binary_cross_entropy_with_logits(pred_d_logits.squeeze(-1), d_next)
 
-            loss = l_mdn + l_reward + l_done
+            # loss = l_mdn + l_reward + l_done
+
+            loss = l_mdn
 
             loss.backward()
             optimizer.step()

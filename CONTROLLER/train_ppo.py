@@ -29,7 +29,7 @@ class WorldModelEnv(gym.Env):
         self.vae.eval()
 
         self.rnn = MDN_RNN(LATENT_DIM, ACTION_DIM, HIDDEN_DIM).to(self.device)
-        self.rnn.load_state_dict(torch.load(rnn_path, map_location=self.device))
+        self.rnn.load_state_dict(torch.load(rnn_path, map_location=self.device), strict=False)
         self.rnn.eval()
 
         self.real_env = gym.make(ENV_NAME, render_mode='rgb_array', continuous=True)

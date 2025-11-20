@@ -73,8 +73,8 @@ if __name__ == '__main__':
             l_done = F.binary_cross_entropy_with_logits(pred_d_logits.squeeze(-1), d_next)
 
             # loss = l_mdn + l_reward + l_done
-
-            loss = l_mdn
+            loss = l_mdn + (20.0 * l_reward) + (20.0 * l_done)
+            # loss = l_mdn
 
             loss.backward()
             optimizer.step()
@@ -98,7 +98,8 @@ if __name__ == '__main__':
                 l_done = F.binary_cross_entropy_with_logits(pred_d_logits.squeeze(-1), d_next)
 
                 # val_loss += (l_mdn + l_reward + l_done).item()
-                val_loss += l_mdn.item()
+                val_loss = l_mdn + (20.0 * l_reward) + (20.0 * l_done)
+                # val_loss += l_mdn.item()
 
         train_loss /= len(train_loader)
         val_loss /= len(val_loader)

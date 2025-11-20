@@ -1,6 +1,8 @@
 import gymnasium as gym
 import numpy as np
 import torch
+import torch.nn as nn
+import torch.nn.functional as F
 import torchvision.transforms as T
 from PIL import Image
 from stable_baselines3 import PPO
@@ -12,14 +14,48 @@ import sys
 # Add project root to path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from VAE.vae_model import VAE, LATENT_DIM
-from RNN.rnn_model import MDN_RNN, ACTION_DIM, HIDDEN_DIM
+from RNN.rnn_model import ACTION_DIM, HIDDEN_DIM
 
 ENV_NAME = 'CarRacing-v3'
 RESIZE_SIZE = 64
 WARMUP_STEPS = 50
 
 
-# We must redefine the Env wrapper to load the model (or import it if you structured it as a module)
+# --- LEGACY RNN CLASS ---
+# Used for visualization because we only need z and h, not rewards.
+class Legacy_MDN_RNN(nn.Module):
+    def __init__(self, z_dim=LATENT_DIM, a_dim=ACTION_DIM, h_dim=HIDDEN_DIM, n_gaussians=5):
+        super(Legacy_MDN_RNN, self).__init__()
+
+        self.z_dim = z_dim
+        self.a_dim = a_dim
+        self.h_dim = h_dim
+        self.n_gaussians = n_gaussians
+
+        self.lstm = nn.LSTM(z_dim + a_dim, h_dim, batch_first=True)
+        self.mdn_head = nn.Linear(h_dim, (2 * z_dim + 1) * n_gaussians)
+
+    def get_mixture_params(self, lstm_output):
+        batch_size, seq_len, _ = lstm_output.shape
+        mdn_params = self.mdn_head(lstm_output)
+        mdn_params = mdn_params.view(batch_size, seq_len, self.n_gaussians, (2 * self.z_dim + 1))
+
+        log_pi = F.log_softmax(mdn_params[..., 0:1], dim=2)
+        mu = mdn_params[..., 1: 1 + self.z_dim]
+        log_sigma = mdn_params[..., 1 + self.z_dim:]
+        return log_pi, mu, log_sigma
+
+    def forward(self, z, a, h_in=None):
+        lstm_in = torch.cat([z, a], dim=-1)
+        if h_in is None:
+            lstm_out, hidden_state = self.lstm(lstm_in)
+        else:
+            lstm_out, hidden_state = self.lstm(lstm_in, h_in)
+
+        log_pi, mu, log_sigma = self.get_mixture_params(lstm_out)
+        return (log_pi, mu, log_sigma), hidden_state
+
+
 class WorldModelEnv(gym.Env):
     def __init__(self, vae_path, rnn_path, device):
         super(WorldModelEnv, self).__init__()
@@ -27,9 +63,15 @@ class WorldModelEnv(gym.Env):
         self.vae = VAE(z_dim=LATENT_DIM).to(self.device)
         self.vae.load_state_dict(torch.load(vae_path, map_location=self.device))
         self.vae.eval()
-        self.rnn = MDN_RNN(LATENT_DIM, ACTION_DIM, HIDDEN_DIM).to(self.device)
-        self.rnn.load_state_dict(torch.load(rnn_path, map_location=self.device))
+
+        self.rnn = Legacy_MDN_RNN(LATENT_DIM, ACTION_DIM, HIDDEN_DIM).to(self.device)
+
+        # --- THE FIX IS HERE: strict=False ---
+        # This allows loading a model WITH reward heads into this class WITHOUT them.
+        # It will simply ignore the extra 'reward_head' and 'done_head' keys.
+        self.rnn.load_state_dict(torch.load(rnn_path, map_location=self.device), strict=False)
         self.rnn.eval()
+
         self.real_env = gym.make(ENV_NAME, render_mode='rgb_array', continuous=True)
         self.action_space = self.real_env.action_space
         self.observation_space = gym.spaces.Box(low=-np.inf, high=np.inf, shape=(LATENT_DIM + HIDDEN_DIM,),
@@ -43,6 +85,7 @@ class WorldModelEnv(gym.Env):
         self.hidden_state = None
 
     def _process_frame(self, frame):
+        # Crop dashboard
         frame = frame[:84, :, :]
         frame_tensor = self.transform(frame).unsqueeze(0).to(self.device)
         with torch.no_grad():
@@ -66,11 +109,14 @@ class WorldModelEnv(gym.Env):
         next_z = self._process_frame(obs)
         action_tensor = torch.tensor(action, dtype=torch.float32).to(self.device).view(1, 1, ACTION_DIM)
         z_tensor = self.current_z.view(1, 1, LATENT_DIM)
+
         with torch.no_grad():
             _, self.hidden_state = self.rnn(z_tensor, action_tensor, self.hidden_state)
+
         h_t = self.hidden_state[0].squeeze(0).squeeze(0)
         next_state = torch.cat([next_z.squeeze(0), h_t], dim=0).cpu().numpy()
         self.current_z = next_z
+
         return next_state, reward, terminated, truncated, info, obs
 
     def close(self):
@@ -81,10 +127,8 @@ def create_agent_video(args):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"Using device: {device}")
 
-    # Load Environment
     env = WorldModelEnv(args.vae_path, args.rnn_path, device)
 
-    # Load PPO Model
     print(f"Loading PPO model from: {args.ppo_path}")
     model = PPO.load(args.ppo_path, device=device)
 
@@ -95,9 +139,8 @@ def create_agent_video(args):
 
     print("Running agent...")
     while not done:
-        action, _states = model.predict(obs, deterministic=True)  # Deterministic for evaluation
+        action, _states = model.predict(obs, deterministic=True)
 
-        # Note: modified step to return 'raw_obs' for video
         obs, reward, terminated, truncated, info, raw_frame = env.step(action)
 
         total_reward += reward
@@ -125,9 +168,9 @@ if __name__ == "__main__":
                         default='cluster_results/model_checkpoints/vae_checkpoints/vae_epoch_10.pth')
     parser.add_argument('--rnn_path', type=str,
                         default='cluster_results/model_checkpoints/rnn_checkpoints/rnn_epoch_4.pth')
-    # Point this to your latest checkpoint or final model
-    parser.add_argument('--ppo_path', type=str, required=True, help='Path to .zip PPO model file')
-    parser.add_argument('--output_path', type=str, default='video_output/agent_run_non_dream.mp4')
+    parser.add_argument('--ppo_path', type=str, default='ppo_checkpoints/ppo_model_300000_steps.zip',
+                        help='Path to .zip PPO model file')
+    parser.add_argument('--output_path', type=str, default='video_output/tst.mp4')
 
     args = parser.parse_args()
     create_agent_video(args)

@@ -108,10 +108,10 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     # --- YOUR CUSTOM PATHS ---
     parser.add_argument('--vae_path', type=str,
-                        default='cluster_results/model_checkpoints/vae_checkpoints/vae_epoch_10.pth')
+                        default='model_checkpoints/vae_2_checkpoints/vae_epoch_19.pth')
     parser.add_argument('--rnn_path', type=str,
-                        default='cluster_results/model_checkpoints/rnn_checkpoints/rnn_epoch_4.pth')
-    parser.add_argument('--save_path', type=str, default='model_checkpoints/controller_checkpoints/ppo_car_racing')
+                        default='rnn_2_checkpoints/rnn_epoch_1.pth')
+    parser.add_argument('--save_path', type=str, default='model_checkpoints/controller_2_checkpoints/ppo_car_racing')
     parser.add_argument('--total_timesteps', type=int, default=3000000)
     args = parser.parse_args()
 

@@ -26,21 +26,21 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Train VAE for World Models')
 
     # --- PATHS UPDATED ---
-    parser.add_argument('--data_dir', type=str, default='data/vae_dataset',
+    parser.add_argument('--data_dir', type=str, default='data/rollouts_v2',
                         help='Directory of dataset')
-    parser.add_argument('--log_dir', type=str, default='model_logs/vae_logs',
+    parser.add_argument('--log_dir', type=str, default='model_logs/vae_2_logs',
                         help='Dir to save logs/models')
-    parser.add_argument('--ckpt_dir', type=str, default='model_checkpoints/vae_checkpoints',
+    parser.add_argument('--ckpt_dir', type=str, default='model_checkpoints/vae_2_checkpoints',
                         help='Dir to save model checkpoints')
     # --- END OF PATH UPDATES ---
 
-    parser.add_argument('--max_rollouts', type=int, default=2000, help='Max rollouts to load')
+    parser.add_argument('--max_rollouts', type=int, default=1000, help='Max rollouts to load')
     parser.add_argument('--latent_dim', type=int, default=LATENT_DIM, help='Latent dimension size')
     parser.add_argument('--epochs', type=int, default=20, help='Number of epochs to train')
     parser.add_argument('--batch_size', type=int, default=64, help='Batch size')
     parser.add_argument('--lr', type=float, default=1e-4, help='Learning rate')
     parser.add_argument('--save_model', type=str, default='vae_final.pth', help='Final trained model filename')
-    parser.add_argument('--save_interval', type=int, default=2,
+    parser.add_argument('--save_interval', type=int, default=1,
                         help='Save sample images and model weights every N epochs')
 
     args = parser.parse_args()

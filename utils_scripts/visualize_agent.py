@@ -165,10 +165,10 @@ def create_agent_video(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--vae_path', type=str,
-                        default='cluster_results/model_checkpoints/vae_checkpoints/vae_epoch_10.pth')
+                        default='model_checkpoints/vae_2_checkpoints/vae_epoch_19.pth')
     parser.add_argument('--rnn_path', type=str,
-                        default='cluster_results/model_checkpoints/rnn_checkpoints/rnn_epoch_4.pth')
-    parser.add_argument('--ppo_path', type=str, default='ppo_checkpoints/ppo_model_300000_steps.zip',
+                        default='rnn_2_checkpoints/rnn_epoch_1.pth')
+    parser.add_argument('--ppo_path', type=str, default='ppo_checkpoints/ppo_model_500000_steps.zip',
                         help='Path to .zip PPO model file')
     parser.add_argument('--output_path', type=str, default='video_output/tst.mp4')
 

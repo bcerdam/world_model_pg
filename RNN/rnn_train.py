@@ -15,7 +15,7 @@ from RNN.rnn_dataset import RNN_Dataset
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Train MDN-RNN for World Models')
 
-    parser.add_argument('--data_path', type=str, default='data/rnn_dataset/rnn_dataset.npz',
+    parser.add_argument('--data_path', type=str, default='data/rnn_2_dataset/rnn_dataset.npz',
                         help='Path to preprocessed rnn_dataset.npz')
     parser.add_argument('--seq_len', type=int, default=100, help='Sequence length for training')
     parser.add_argument('--epochs', type=int, default=20, help='Number of epochs to train')
@@ -25,8 +25,8 @@ if __name__ == '__main__':
 
     # Removed --dropout and --weight_decay arguments
 
-    parser.add_argument('--log_dir', type=str, default='rnn_logs', help='Dir to save logs/models')
-    parser.add_argument('--ckpt_dir', type=str, default='rnn_checkpoints', help='Dir to save model checkpoints')
+    parser.add_argument('--log_dir', type=str, default='rnn_2_logs', help='Dir to save logs/models')
+    parser.add_argument('--ckpt_dir', type=str, default='rnn_2_checkpoints', help='Dir to save model checkpoints')
     parser.add_argument('--save_model', type=str, default='rnn_final.pth', help='Final trained model filename')
     parser.add_argument('--save_interval', type=int, default=1, help='Save model weights every N epochs')
 

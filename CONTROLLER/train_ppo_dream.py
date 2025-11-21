@@ -78,8 +78,11 @@ class DreamEnv(gym.Env):
         mu_val = self.all_mus[rollout_idx][time_idx]
         logvar_val = self.all_logvars[rollout_idx][time_idx]
 
-        mu = torch.from_numpy(mu_val).to(self.device)
-        logvar = torch.from_numpy(logvar_val).to(self.device)
+        # mu = torch.from_numpy(mu_val).to(self.device)
+        # logvar = torch.from_numpy(logvar_val).to(self.device)
+        mu = torch.from_numpy(mu_val.astype(np.float32)).to(self.device)
+        logvar = torch.from_numpy(logvar_val.astype(np.float32)).to(self.device)
+
 
         std = torch.exp(0.5 * logvar)
         eps = torch.randn_like(std)
@@ -129,9 +132,9 @@ class DreamEnv(gym.Env):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--rnn_path', type=str,
-                        default='cluster_results/model_checkpoints/rnn_checkpoints/rnn_epoch_4.pth')
+                        default='rnn_checkpoints/rnn_epoch_4.pth')
     parser.add_argument('--data_path', type=str, default='data/rnn_dataset/rnn_dataset.npz')
-    parser.add_argument('--save_path', type=str, default='model_checkpoints/controller_checkpoints/ppo_dream')
+    parser.add_argument('--save_path', type=str, default='model_checkpoints/controller_2_checkpoints/ppo_dream')
     parser.add_argument('--total_timesteps', type=int, default=3000000)
     parser.add_argument('--temperature', type=float, default=1.15, help='Dream temperature (higher = harder)')
     args = parser.parse_args()

@@ -59,19 +59,25 @@ class RNN_Dataset(Dataset):
     def __getitem__(self, idx):
         rollout_idx, start_idx = self.indices[idx]
 
-        mu_seq = torch.from_numpy(self.mus[rollout_idx][start_idx: start_idx + self.seq_len])
-        logvar_seq = torch.from_numpy(self.logvars[rollout_idx][start_idx: start_idx + self.seq_len])
+        # --- FIX: Force cast to float32 for all inputs ---
+
+        mu_seq = torch.from_numpy(self.mus[rollout_idx][start_idx: start_idx + self.seq_len].astype(np.float32))
+        logvar_seq = torch.from_numpy(self.logvars[rollout_idx][start_idx: start_idx + self.seq_len].astype(np.float32))
 
         z_t = self.__reparameterize(mu_seq, logvar_seq)
 
-        a_t = torch.from_numpy(self.actions[rollout_idx][start_idx: start_idx + self.seq_len]).float()
+        a_t = torch.from_numpy(self.actions[rollout_idx][start_idx: start_idx + self.seq_len].astype(np.float32))
 
-        mu_next_seq = torch.from_numpy(self.mus[rollout_idx][start_idx + 1: start_idx + self.seq_len + 1])
-        logvar_next_seq = torch.from_numpy(self.logvars[rollout_idx][start_idx + 1: start_idx + self.seq_len + 1])
+        mu_next_seq = torch.from_numpy(
+            self.mus[rollout_idx][start_idx + 1: start_idx + self.seq_len + 1].astype(np.float32))
+        logvar_next_seq = torch.from_numpy(
+            self.logvars[rollout_idx][start_idx + 1: start_idx + self.seq_len + 1].astype(np.float32))
 
         z_tplus1 = self.__reparameterize(mu_next_seq, logvar_next_seq)
 
-        r_tplus1 = torch.from_numpy(self.rewards[rollout_idx][start_idx + 1: start_idx + self.seq_len + 1]).float()
-        d_tplus1 = torch.from_numpy(self.dones[rollout_idx][start_idx + 1: start_idx + self.seq_len + 1]).float()
+        r_tplus1 = torch.from_numpy(
+            self.rewards[rollout_idx][start_idx + 1: start_idx + self.seq_len + 1].astype(np.float32))
+        d_tplus1 = torch.from_numpy(
+            self.dones[rollout_idx][start_idx + 1: start_idx + self.seq_len + 1].astype(np.float32))
 
         return (z_t, a_t, z_tplus1, r_tplus1, d_tplus1)

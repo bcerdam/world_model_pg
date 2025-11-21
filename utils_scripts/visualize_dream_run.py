@@ -58,8 +58,10 @@ def visualize_dream(args):
     mu_val = all_mus[rollout_idx][time_idx]
     logvar_val = all_logvars[rollout_idx][time_idx]
 
-    mu = torch.from_numpy(mu_val).to(device).unsqueeze(0)
-    logvar = torch.from_numpy(logvar_val).to(device).unsqueeze(0)
+    # mu = torch.from_numpy(mu_val).to(device).unsqueeze(0)
+    # logvar = torch.from_numpy(logvar_val).to(device).unsqueeze(0)
+    mu = torch.from_numpy(mu_val.astype(np.float32)).to(device)
+    logvar = torch.from_numpy(logvar_val.astype(np.float32)).to(device)
 
     z = (mu + torch.exp(0.5 * logvar) * torch.randn_like(mu)).view(1, 1, LATENT_DIM)
 
@@ -97,12 +99,12 @@ def visualize_dream(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--vae_path', type=str,
-                        default='cluster_results/model_checkpoints/vae_checkpoints/vae_epoch_10.pth')
+                        default='model_checkpoints/vae_2_checkpoints/vae_epoch_19.pth')
     parser.add_argument('--rnn_path', type=str,
-                        default='cluster_results/model_checkpoints/rnn_checkpoints/rnn_epoch_4.pth')
-    parser.add_argument('--ppo_path', type=str, default='ppo_checkpoints/ppo_model_300000_steps.zip', help='Path to .zip PPO model')
-    parser.add_argument('--data_path', type=str, default='data/rnn_dataset/rnn_dataset.npz')
-    parser.add_argument('--output_path', type=str, default='video_output/ppo_run_dream_1.mp4')
+                        default='rnn_2_checkpoints/rnn_epoch_1.pth')
+    parser.add_argument('--ppo_path', type=str, default='ppo_dream_checkpoints/ppo_dream_400000_steps.zip', help='Path to .zip PPO model')
+    parser.add_argument('--data_path', type=str, default='data/rnn_2_dataset/rnn_dataset.npz')
+    parser.add_argument('--output_path', type=str, default='video_output/ppo_run_dream_test.mp4')
     parser.add_argument('--steps', type=int, default=1000)
     parser.add_argument('--temperature', type=float, default=1.0)
 

@@ -34,9 +34,9 @@ if __name__ == '__main__':
                         help='Dir to save model checkpoints')
     # --- END OF PATH UPDATES ---
 
-    parser.add_argument('--max_rollouts', type=int, default=1000, help='Max rollouts to load')
+    parser.add_argument('--max_rollouts', type=int, default=10000, help='Max rollouts to load')
     parser.add_argument('--latent_dim', type=int, default=LATENT_DIM, help='Latent dimension size')
-    parser.add_argument('--epochs', type=int, default=20, help='Number of epochs to train')
+    parser.add_argument('--epochs', type=int, default=50, help='Number of epochs to train')
     parser.add_argument('--batch_size', type=int, default=64, help='Batch size')
     parser.add_argument('--lr', type=float, default=1e-4, help='Learning rate')
     parser.add_argument('--save_model', type=str, default='vae_final.pth', help='Final trained model filename')

@@ -4,7 +4,7 @@ import torch.nn.functional as F
 import numpy as np
 
 N_GAUSSIANS = 5
-LATENT_DIM = 32
+LATENT_DIM = 256
 ACTION_DIM = 3
 HIDDEN_DIM = 256
 

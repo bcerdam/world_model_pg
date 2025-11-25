@@ -18,7 +18,7 @@ if __name__ == '__main__':
     parser.add_argument('--data_path', type=str, default='data/rnn_2_dataset/rnn_dataset.npz',
                         help='Path to preprocessed rnn_dataset.npz')
     parser.add_argument('--seq_len', type=int, default=100, help='Sequence length for training')
-    parser.add_argument('--epochs', type=int, default=20, help='Number of epochs to train')
+    parser.add_argument('--epochs', type=int, default=50, help='Number of epochs to train')
     parser.add_argument('--batch_size', type=int, default=32, help='Batch size')
     parser.add_argument('--lr', type=float, default=1e-3, help='Learning rate')
     parser.add_argument('--hidden_dim', type=int, default=HIDDEN_DIM, help='RNN hidden dimension')

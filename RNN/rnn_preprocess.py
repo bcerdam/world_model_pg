@@ -81,8 +81,8 @@ def preprocess_rollouts(data_dir, vae_model_path, output_path, max_rollouts):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Preprocess dataset for RNN')
     parser.add_argument('--data_dir', type=str, default='data/rollouts_v2', help='Directory of .npz rollouts')
-    parser.add_argument('--vae_model', type=str, default='model_checkpoints/vae_2_checkpoints/vae_epoch_19.pth', help='Path to trained VAE model')
-    parser.add_argument('--output_path', type=str, default='data/rnn_2_dataset/rnn_dataset.npz', help='Path to save the new preprocessed file')
+    parser.add_argument('--vae_model', type=str, default='model_checkpoints/vae_256/vae_epoch_20.pth', help='Path to trained VAE model')
+    parser.add_argument('--output_path', type=str, default='data/rnn_256_dataset/rnn_dataset.npz', help='Path to save the new preprocessed file')
     parser.add_argument('--max_rollouts', type=int, default=1000, help='Max rollouts to process')
     args = parser.parse_args()
 

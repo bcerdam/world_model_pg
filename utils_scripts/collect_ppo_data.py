@@ -35,12 +35,12 @@ def process_frame(frame, transform, device, vae):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Collect data using trained PPO agent")
 
-    parser.add_argument('--num_rollouts', type=int, default=10000, help='Number of rollouts to collect')
-    parser.add_argument('--data_dir', type=str, default='data/rollouts_v2', help='Directory to save .npz files')
+    parser.add_argument('--num_rollouts', type=int, default=1000, help='Number of rollouts to collect')
+    parser.add_argument('--data_dir', type=str, default='data/rollouts_v2_official', help='Directory to save .npz files')
 
-    parser.add_argument('--vae_path', type=str, default='model_checkpoints/vae_checkpoints/vae_epoch_10.pth', help='Path to trained VAE model')
-    parser.add_argument('--rnn_path', type=str, default='rnn_checkpoints/rnn_epoch_4.pth', help='Path to trained RNN model')
-    parser.add_argument('--ppo_path', type=str, default='ppo_dream_checkpoints/ppo_dream_1450000_steps.zip', help='Path to trained PPO model .zip')
+    parser.add_argument('--vae_path', type=str, default='material_final/pesos/entrenamiento_1/vae_epoch_19.pth', help='Path to trained VAE model')
+    parser.add_argument('--rnn_path', type=str, default='material_final/pesos/entrenamiento_1/rnn_epoch_1.pth', help='Path to trained RNN model')
+    parser.add_argument('--ppo_path', type=str, default='material_final/pesos/entrenamiento_1/ppo_model_325000_steps.zip', help='Path to trained PPO model .zip')
 
     args = parser.parse_args()
 

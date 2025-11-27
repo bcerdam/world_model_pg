@@ -26,15 +26,15 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Train VAE for World Models')
 
     # --- PATHS UPDATED ---
-    parser.add_argument('--data_dir', type=str, default='data/rollouts_v2',
+    parser.add_argument('--data_dir', type=str, default='data/rollouts_v2_official',
                         help='Directory of dataset')
-    parser.add_argument('--log_dir', type=str, default='model_logs/vae_2_logs',
+    parser.add_argument('--log_dir', type=str, default='model_logs/vae_2_32_official_logs',
                         help='Dir to save logs/models')
-    parser.add_argument('--ckpt_dir', type=str, default='model_checkpoints/vae_2_checkpoints',
+    parser.add_argument('--ckpt_dir', type=str, default='model_checkpoints/vae_2_32_official_checkpoints',
                         help='Dir to save model checkpoints')
     # --- END OF PATH UPDATES ---
 
-    parser.add_argument('--max_rollouts', type=int, default=10000, help='Max rollouts to load')
+    parser.add_argument('--max_rollouts', type=int, default=1000, help='Max rollouts to load')
     parser.add_argument('--latent_dim', type=int, default=LATENT_DIM, help='Latent dimension size')
     parser.add_argument('--epochs', type=int, default=50, help='Number of epochs to train')
     parser.add_argument('--batch_size', type=int, default=64, help='Batch size')

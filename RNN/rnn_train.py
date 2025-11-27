@@ -15,7 +15,7 @@ from RNN.rnn_dataset import RNN_Dataset
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Train MDN-RNN for World Models')
 
-    parser.add_argument('--data_path', type=str, default='data/rnn_256_dataset/rnn_dataset.npz',
+    parser.add_argument('--data_path', type=str, default='data/rnn_2_dataset/rnn_dataset.npz',
                         help='Path to preprocessed rnn_dataset.npz')
     parser.add_argument('--seq_len', type=int, default=100, help='Sequence length for training')
     parser.add_argument('--epochs', type=int, default=50, help='Number of epochs to train')

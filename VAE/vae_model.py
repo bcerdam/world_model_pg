@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-LATENT_DIM = 256
+LATENT_DIM = 32
 
 
 class VAE(nn.Module):

@@ -8,6 +8,7 @@ from stable_baselines3.common.callbacks import CheckpointCallback
 import argparse
 import os
 import sys
+import time
 
 # --- Add project root to path ---
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -108,9 +109,9 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     # --- YOUR CUSTOM PATHS ---
     parser.add_argument('--vae_path', type=str,
-                        default='model_checkpoints/vae_2_checkpoints/vae_epoch_19.pth')
+                        default='material_final/pesos/entrenamiento_1_2/32/vae_epoch_40.pth')
     parser.add_argument('--rnn_path', type=str,
-                        default='rnn_2_checkpoints/rnn_epoch_1.pth')
+                        default='material_final/pesos/entrenamiento_1_2/32/rnn_epoch_1.pth')
     parser.add_argument('--save_path', type=str, default='model_checkpoints/controller_2_checkpoints/ppo_car_racing')
     parser.add_argument('--total_timesteps', type=int, default=3000000)
     args = parser.parse_args()
@@ -124,7 +125,7 @@ if __name__ == "__main__":
     os.makedirs(os.path.dirname(args.save_path), exist_ok=True)
 
     checkpoint_callback = CheckpointCallback(
-        save_freq=50000,
+        save_freq=25000,
         save_path='./ppo_checkpoints/',
         name_prefix='ppo_model'
     )
@@ -139,10 +140,20 @@ if __name__ == "__main__":
         batch_size=64,
         n_epochs=10,
         gamma=0.99,
-        device=device
+        device=device,
+        tensorboard_log="./ppo_normal_logs/"
     )
 
-    model.learn(total_timesteps=args.total_timesteps, callback=checkpoint_callback)
+    log_dir = "./ppo_normal_logs/"
+    start_time = time.time()
+
+    model.learn(total_timesteps=args.total_timesteps, callback=checkpoint_callback, tb_log_name="visual_agent_run_1")
+
+    end_time = time.time()
+    total_seconds = end_time - start_time
+    os.makedirs(log_dir, exist_ok=True)
+    with open(os.path.join(log_dir, "training_duration.txt"), "w") as f:
+        f.write(f"Training took {total_seconds:.2f} seconds ({total_seconds / 3600:.2f} hours)\n")
 
     model.save(args.save_path)
     print(f"Model saved to {args.save_path}.zip")

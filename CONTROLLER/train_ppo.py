@@ -109,9 +109,9 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     # --- YOUR CUSTOM PATHS ---
     parser.add_argument('--vae_path', type=str,
-                        default='material_final/pesos/entrenamiento_1_2/32/vae_epoch_40.pth')
+                        default='material_final/pesos/entrenamiento_lpips/vae_epoch_50.pth')
     parser.add_argument('--rnn_path', type=str,
-                        default='material_final/pesos/entrenamiento_1_2/32/rnn_epoch_1.pth')
+                        default='rnn_checkpoints_lpips/rnn_epoch_1.pth')
     parser.add_argument('--save_path', type=str, default='model_checkpoints/controller_2_checkpoints/ppo_car_racing')
     parser.add_argument('--total_timesteps', type=int, default=3000000)
     args = parser.parse_args()

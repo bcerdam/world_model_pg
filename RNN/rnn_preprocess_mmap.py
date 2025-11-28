@@ -125,8 +125,8 @@ def preprocess_mmap(data_dir, output_dir, vae_path, max_rollouts):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--data_dir', type=str, default='data/rollouts_v2_official')
-    parser.add_argument('--output_dir', type=str, default='data/rnn_32_mmap_dataset')
-    parser.add_argument('--vae_model', type=str, default='material_final/pesos/entrenamiento_1_2/32/vae_epoch_40.pth')
+    parser.add_argument('--output_dir', type=str, default='data/rnn_lpips_mmap_dataset')
+    parser.add_argument('--vae_model', type=str, default='material_final/pesos/entrenamiento_lpips/vae_epoch_50.pth')
     parser.add_argument('--max_rollouts', type=int, default=1000)
 
     args = parser.parse_args()

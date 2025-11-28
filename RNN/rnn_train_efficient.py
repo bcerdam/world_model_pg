@@ -76,14 +76,14 @@ class MMapDataset(Dataset):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--data_path', type=str, default='data/rnn_32_mmap_dataset', help='Path to MMAP directory')
+    parser.add_argument('--data_path', type=str, default='data/rnn_lpips_mmap_dataset', help='Path to MMAP directory')
     parser.add_argument('--seq_len', type=int, default=100)
     parser.add_argument('--batch_size', type=int, default=32)
     parser.add_argument('--epochs', type=int, default=50)
-    parser.add_argument('--ckpt_dir', type=str, default='rnn_checkpoints_efficient',
+    parser.add_argument('--ckpt_dir', type=str, default='rnn_checkpoints_lpips',
                         help='Folder to save per-epoch checkpoints')
-    parser.add_argument('--log_dir', type=str, default='rnn_logs_efficient', help='Folder to save CSV logs')
-    parser.add_argument('--save_model', type=str, default='rnn_efficient_final.pth')
+    parser.add_argument('--log_dir', type=str, default='rnn_logs_lpips', help='Folder to save CSV logs')
+    parser.add_argument('--save_model', type=str, default='rnn_lpips_final.pth')
 
     args = parser.parse_args()
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
